@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(libcopter_ros)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
 
@@ -9,6 +13,12 @@ project(libcopter_ros)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   roscpp roslib cmake_modules cv_bridge image_transport sensor_msgs geometry_msgs)
+
+
+
+find_package(OpenCV REQUIRED core imgproc highgui)
+
+add_subdirectory("libcopter/parse_tcpstream" libcopter_build EXCLUDE_FROM_ALL)
 #catkin_package(
 #    DEPENDS OpenCV Eigen Boost
 #    CATKIN_DEPENDS roscpp roslib image_transport pcl_ros
@@ -120,6 +130,7 @@ catkin_package(
 ## Your package locations should be listed before other locations
 include_directories(
 # include
+ "libcopter/parse_tcpstream"
  ${catkin_INCLUDE_DIRS}
 )
 
@@ -151,6 +162,7 @@ add_executable(${PROJECT_NAME}_node src/libcopter_ros_node.cpp)
 ## Specify libraries to link a library or executable target against
  target_link_libraries(${PROJECT_NAME}_node
    ${catkin_LIBRARIES}
+   copter_static
  )
 
 
