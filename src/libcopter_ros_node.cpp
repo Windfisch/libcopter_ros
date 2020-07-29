@@ -3,6 +3,7 @@
 #include <std_msgs/Empty.h>
 #include <geometry_msgs/Twist.h>
 #include <sensor_msgs/Image.h>
+#include <sensor_msgs/Temperature.h> // HACK
 #include <cv_bridge/cv_bridge.h>
 #include <iostream>
 #include "sg500.hpp"
@@ -57,6 +58,8 @@ int main(int argc, char** argv)
 	ros::Rate loop_rate(90);
 
 	ros::Publisher image = n.advertise<sensor_msgs::Image>("camera_raw", 5);
+	ros::Publisher telem1_pub = n.advertise<sensor_msgs::Temperature>("telemetry1", 5);
+	ros::Publisher telem2_pub = n.advertise<sensor_msgs::Temperature>("telemetry2", 5);
 	ros::Subscriber cmd_vel_subscriber = n.subscribe("cmd_vel",5, cmd_vel_callback);
 	ros::Subscriber takeoff_subscriber = n.subscribe("takeoff",1, cmd_takeoff_callback);
 	ros::Subscriber land_subscriber = n.subscribe("land",1, cmd_land_callback);
@@ -89,6 +92,29 @@ int main(int argc, char** argv)
 				cv_img.header.stamp = timestamp(frame.timestamp);
 				
 				image.publish(cv_img.toImageMsg());
+			}
+		}
+		for (const auto& telem : telemetry_frames)
+		{
+			if (telem.timestamp < 0)
+			{
+				ROS_WARN("got telemetry message with negative timestamp, ignoring!");
+				continue;
+			}
+			sensor_msgs::Temperature message; // FIXME HACK: use a proper message type instead.
+			message.header.frame_id = "libcopter";
+			message.header.stamp = timestamp(telem.timestamp);
+			message.temperature = telem.value;
+			switch (telem.type)
+			{
+				case SG500::TelemetryFrame::Type::UNKNOWN1:
+					telem1_pub.publish(message);
+					break;
+				case SG500::TelemetryFrame::Type::UNKNOWN2:
+					telem2_pub.publish(message);
+					break;
+				default:
+					ROS_WARN_THROTTLE(1, "Unknown telemetry type %d", telem.type);
 			}
 		}
 
