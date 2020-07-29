@@ -13,26 +13,24 @@ static SG500 drone;
 
 void cmd_vel_callback(const geometry_msgs::Twist::ConstPtr& msg)
 {
-	std::cout << "msg: " << msg->linear.x << ", " << msg->linear.y << ", " << msg->linear.z << "; " << msg->angular.z << std::endl;
-
 	drone.command(-msg->linear.y, -msg->linear.x, -msg->angular.z, msg->linear.z);
 }
 
 void cmd_takeoff_callback(const std_msgs::Empty& msg)
 {
-	std::cout << "takeoff" << std::endl;
+	ROS_DEBUG("takeoff");
 	drone.takeoff();
 }
 
 void cmd_land_callback(const std_msgs::Empty& msg)
 {
-	std::cout << "land" << std::endl;
+	ROS_DEBUG("land");
 	drone.land();
 }
 
 void cmd_panic_callback(const std_msgs::Empty& msg)
 {
-	std::cout << "panic" << std::endl;
+	ROS_DEBUG("panic");
 	drone.panic();
 }
 
@@ -50,12 +48,11 @@ int main(int argc, char** argv)
 	ros::Rate loop_rate(90);
 
 	cv_bridge::CvImage cv_img;
-
 	cv_img.encoding = "bgr8";
 
 	if (!drone.initialize())
 	{
-		ROS_ERROR("Failed to initialize drone!");
+		ROS_FATAL("Failed to initialize drone!");
 		exit(1);
 	}
 	
